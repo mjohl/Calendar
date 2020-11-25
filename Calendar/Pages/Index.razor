@@ -1,0 +1,66 @@
+﻿@page "/"
+
+@using System.Globalization;
+@code {
+    DateTimeFormatInfo dateTimeFormatInfo = CultureInfo.CurrentCulture.DateTimeFormat;
+    DateTime monthEnd;
+    int monthsAway = 0;
+    int numDummyColumn = 0;
+    int numDummyColumnPost = 0;
+    int year = 2020;
+    int month = 0;
+    List<CalendarItem> items = new List<CalendarItem>();
+    protected override void OnInitialized()
+    {
+        items.Add(new CalendarItem(new DateTime(2020, 11, 11), "Test day 1"));
+        items.Add(new CalendarItem(new DateTime(2020, 11, 30), "Test day 2"));
+        items.Add(new CalendarItem(new DateTime(2020, 12, 25), "Christmas"));
+        items.Add(new CalendarItem(new DateTime(2021, 1, 1), "New Years"));
+        CreateMonth();
+    }
+
+    void CreateMonth()
+    {
+        var tempDate = DateTime.Now.AddMonths(monthsAway);
+        month = tempDate.Month;
+        year = tempDate.Year;
+
+        DateTime monthStart = new DateTime(year, month, 1);
+        monthEnd = monthStart.AddMonths(1).AddDays(-1);
+
+        int startDayOfWeek = (int)monthStart.DayOfWeek;
+        numDummyColumn = startDayOfWeek;
+
+        int daysInWeek = 7;
+        int weeksInMonth = (int)Math.Ceiling((startDayOfWeek + monthEnd.Day) / (decimal)daysInWeek);
+        numDummyColumnPost = daysInWeek * weeksInMonth - (monthEnd.Day + numDummyColumn);
+    }
+}
+
+<button @onclick="() => { monthsAway--; CreateMonth(); }">Previous Month</button>
+<h1>@dateTimeFormatInfo.GetMonthName(month), @year</h1>
+<button @onclick="() => { monthsAway++; CreateMonth(); }">Next Month</button>
+
+<section>
+    @for (int i = 0; i < numDummyColumn; i++)
+    {
+        <div></div>
+    }
+    @for (int i = 1; i <= monthEnd.Day; i++)
+    {
+        var calendarItem =
+            items.FirstOrDefault(n => n.Date == new DateTime(year, month, i));
+
+        <div>
+            <h2>@i</h2>
+            <p>
+                @((MarkupString)(calendarItem == null ? "&nbsp;" : calendarItem.Name))
+            </p>
+
+        </div>
+    }
+    @for (int i = 0; i < numDummyColumnPost; i++)
+    {
+        <div></div>
+    }
+</section>
